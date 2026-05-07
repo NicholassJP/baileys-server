@@ -102,7 +102,6 @@ app.post("/send", authMiddleware, async (req, res) => {
   }
 
   try {
-    // Format: 628xxx@s.whatsapp.net
     const jid = number.replace(/[^0-9]/g, "") + "@s.whatsapp.net";
     await sock.sendMessage(jid, { text: message });
     console.log("Pesan terkirim ke:", jid);
@@ -110,6 +109,31 @@ app.post("/send", authMiddleware, async (req, res) => {
   } catch (err) {
     console.error("Gagal kirim:", err);
     res.status(500).json({ message: "Gagal mengirim pesan.", error: err.message });
+  }
+});
+
+// Kirim gambar dari URL
+app.post("/send-image", authMiddleware, async (req, res) => {
+  const { number, imageUrl, caption } = req.body;
+
+  if (!number || !imageUrl) {
+    return res.status(400).json({ message: "number dan imageUrl wajib diisi." });
+  }
+  if (!isConnected) {
+    return res.status(503).json({ message: "WhatsApp belum terhubung." });
+  }
+
+  try {
+    const jid = number.replace(/[^0-9]/g, "") + "@s.whatsapp.net";
+    await sock.sendMessage(jid, {
+      image: { url: imageUrl },
+      caption: caption || "",
+    });
+    console.log("Gambar terkirim ke:", jid);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Gagal kirim gambar:", err);
+    res.status(500).json({ message: "Gagal mengirim gambar.", error: err.message });
   }
 });
 
